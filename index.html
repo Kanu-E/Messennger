@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+  
+    <div class = "container">
+        <br>
+        <div class = "jumbotron">
+            <h1 >Send Messages </h1>
+            <br>
+            <input id="name" class= "form-control" placeholder="name">
+            <br>
+            <textarea id= "message" class= "form-control" placeholder="message" rows="4"></textarea>
+            <br>
+            <button id="send" class= "btn btn-primary">Send</button>
+        </div>
+        <div id="messages">
+
+        </div>
+    </div>
+    <script>
+        var socket = io()
+        $(()=>{
+            $("#send").click(()=>{
+                var message = {name: $("#name").val(), message: $("#message").val()}
+                postMessage(message)
+            })
+            getMessages()
+        })
+
+        socket.on('message', addMessage)
+
+        function addMessage (message){
+            $('#messages').append(`<h4> ${message.name}</h4> <p> ${message.message}</p>`)
+        }
+        function getMessages(){
+            $.get('messages', data =>{
+                data.forEach(addMessage)
+            })
+        }
+
+        function postMessage(message){
+            $.post('messages', message)
+        }
+        
+    </script>
+</html>
