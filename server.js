@@ -11,19 +11,27 @@ app.use(bodyParser.urlencoded({extended: true }))
 
 var dbUrl = 'mongodb+srv://Emeka:Emeka@cluster0.gbpa5.mongodb.net/Learning-node?retryWrites=true&w=majority'
 
-var messages = [
-    {name:'Tim', message:'Hello'},
-    {name:'Mark', message:'Hi'}
-];
+var Message = mongoose.model('Message', {
+    name: String,
+    message: String
+})
 
 app.get('/messages', (req, res)=>{
-    res.send(messages)
+    Message.find({},(err, messages)=>{
+        res.send(messages)
+    })
 })
 
 app.post('/messages', (req, res)=>{
-    messages.push(req.body)
-    io.emit('message', req.body)
-    res.sendStatus(200)
+    var message= new Message(req.body)
+    message.save((err)=>{
+        if(err)
+            sendStatus(500)
+        io.emit('message', req.body)
+        res.sendStatus(200)
+        console.log(message)
+    })
+
 })
 
 io.on('connection', (socket)=>{
