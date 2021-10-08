@@ -25,21 +25,22 @@ app.get('/messages', (req, res)=>{
 app.post('/messages', (req, res)=>{
     var message= new Message(req.body)
 
-    message.save((err)=>{
-        if(err)
-            sendStatus(500)
+    message.save().then(()=>{
 
         Message.findOne({message: 'badword'},(err, censored)=>{
             if(censored){
                 console.log('censored word found')
-                message.remove({_id: censored.id}, (err)=>{
+                message.remove({_id: censored.id}, ()=>{
                     console.log('censored word removed')
                 })
             }
         })
-        
+
         io.emit('message', req.body)
         res.sendStatus(200)
+    }).catch((err)=>{
+        res.sendStatus(500)
+        return console.error(err)
     })
 
 })
