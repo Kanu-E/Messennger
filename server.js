@@ -10,6 +10,7 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({extended: true }))
 
 var dbUrl = 'mongodb+srv://Emeka:Emeka@cluster0.gbpa5.mongodb.net/Learning-node?retryWrites=true&w=majority'
+mongoose.promise = Promise
 
 var Message = mongoose.model('Message', {
     name: String,
@@ -22,28 +23,23 @@ app.get('/messages', (req, res)=>{
     })
 })
 
-app.post('/messages', (req, res)=>{
-    var message= new Message(req.body)
-
-    message.save().then(()=>{
-
-        Message.findOne({message: 'badword'},(err, censored)=>{
-            if(censored){
-                console.log('censored word found')
-                message.remove({_id: censored.id}, ()=>{
-                    console.log('censored word removed')
-                })
-            }
-        })
-
+app.post('/messages', async (req, res)=>{
+    var message = new Message(req.body)
+    var saved = await message.save()
+    var censored = await Message.findOne({message: 'badword'})
+    if(censored)
+            await message.remove({_id: censored.id})
+    else
         io.emit('message', req.body)
         res.sendStatus(200)
-    }).catch((err)=>{
-        res.sendStatus(500)
-        return console.error(err)
-    })
-
+    
+    // .catch((err)=>{
+    //     res.sendStatus(500)
+    //     return console.error(err)
+    // })
 })
+
+
 
 io.on('connection', (socket)=>{
     console.log('a user is connected')
@@ -53,7 +49,7 @@ mongoose.connect(dbUrl, (err)=>{
     console.log('Mongo db connection', err)
 })
 
-var server = http.listen(3000,()=>{
+var server = http.listen(3000, ()=>{
     console.log('listening on', server.address().port);
 })
 
